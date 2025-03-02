@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Baccarat</title>
+    <style>
+        body {
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(to bottom, #004d7a, #0094c6);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .btn-gradient-3d {
+            display: inline-block;
+            padding: 1em 2em;
+            text-decoration: none;
+            border-radius: 30px;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 24px;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0px 5px 15px rgba(0, 164, 255, 0.5);
+            border: none;
+        }
+        .btn-gradient-3d:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 10px 20px rgba(0, 164, 255, 0.8);
+        }
+        .btn-player { background: linear-gradient(to bottom, #0077ff, #33aaff); }
+        .btn-banker { background: linear-gradient(to bottom, #ff4b4b, #ff7777); }
+        .btn-tie { background: linear-gradient(to bottom, #2eb62c, #6bd66b); }
+        .btn-back, .btn-reset {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            line-height: 50px;
+            font-size: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0px 5px 10px rgba(255, 255, 255, 0.3);
+        }
+        .btn-back { background: linear-gradient(to bottom, #666, #444); }
+        .btn-reset { background: linear-gradient(to bottom, #ffcc00, #ff9900); }
+        h2 {
+            font-size: 42px;
+            font-weight: bold;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+        }
+        #prediction {
+            font-size: 36px;
+            font-weight: bold;
+            padding: 15px;
+            margin-top: 20px;
+            display: inline-block;
+            background: linear-gradient(to bottom, #ffffff, #cccccc);
+            color: #004d7a;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h2>Wave Baccarat</h2>
+    <div id="prediction">予測: なし</div>
+    <br><br>
+    <a href="#" class="btn-gradient-3d btn-player" onclick="if (window.predictor) window.predictor.addResult('P');">プレイヤー</a>
+    <a href="#" class="btn-gradient-3d btn-banker" onclick="if (window.predictor) window.predictor.addResult('B');">バンカー</a>
+    <a href="#" class="btn-gradient-3d btn-tie" onclick="if (window.predictor) window.predictor.addResult('T');">タイ</a>
+    <br><br>
+    <a href="#" class="btn-gradient-3d btn-back" onclick="if (window.predictor) window.predictor.undo();">←</a>
+    <a href="#" class="btn-gradient-3d btn-reset" onclick="if (window.predictor) window.predictor.reset();">⟲</a>
+
+    <script>
+        class BaccaratPredictor {
+            constructor() {
+                this.history = [];
+                this.lastPrediction = "なし";
+            }
+
+            addResult(result) {
+                if (result === 'T') return;
+                this.history.push(result);
+                this.updatePrediction();
+            }
+
+            undo() {
+                if (this.history.length > 0) {
+                    this.history.pop();
+                    this.updatePrediction();
+                }
+            }
+
+            reset() {
+                this.history = [];
+                this.lastPrediction = "なし";
+                this.updatePrediction();
+            }
+
+             updatePrediction() {
+    let predictionElement = document.getElementById("prediction");
+    let nextPrediction = this.checkPatterns();
+    console.log("履歴:", this.history.join(" "));
+    console.log("適用された予測:", nextPrediction);
+    
+    this.lastPrediction = nextPrediction;
+    predictionElement.textContent = `予測: ${nextPrediction === "なし" ? "なし" : (nextPrediction === 'P' ? 'プレイヤー' : 'バンカー')}`;
+}
+
+
+           checkPatterns() {
+    if (this.history.length < 4) return "なし";
+    let nextPrediction = "なし";
+
+    if (this.isDragon()) {
+        nextPrediction = this.history[this.history.length - 1];
+        console.log("ドラゴン適用:", nextPrediction);
+    } else if (this.isTeleco()) {
+        nextPrediction = this.history[this.history.length - 1] === 'P' ? 'B' : 'P';
+        console.log("テレコ適用:", nextPrediction);
+    } else if (this.isKamaboko()) {
+        nextPrediction = this.history[this.history.length - 3];
+        console.log("カマボコ適用:", nextPrediction);
+    } else if (this.isTwoOnTwo()) {
+        nextPrediction = this.history[this.history.length - 3];
+        console.log("2オン2適用:", nextPrediction);
+    }
+
+    console.log("最終適用された予測:", nextPrediction);
+    return nextPrediction;
+}
+
+
+            isDragon() {
+                return this.history.length >= 4 && this.history.slice(-4).every(m => m === this.history[this.history.length - 1]);
+            }
+
+           isTeleco() {
+    if (this.history.length < 4) return false;
+    let lastFour = this.history.slice(-4);
+    return lastFour[0] !== lastFour[1] && lastFour[1] !== lastFour[2] && lastFour[2] !== lastFour[3];
+}
+
+
+           isKamaboko() {
+    if (this.history.length < 4) return false;
+    let lastFour = this.history.slice(-4);
+    return lastFour[0] === lastFour[1] && lastFour[2] === lastFour[3] && lastFour[0] !== lastFour[2];
+}
+
+
+            isTwoOnTwo() {
+                return this.history.length >= 6 && this.history.slice(-6).every((m, i) => m === this.history[i % 2 === 0 ? i : i - 1]);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("ページ読み込み完了 - predictorを初期化");
+            window.predictor = new BaccaratPredictor();
+        });
+    </script>
+</body>
+</html>
